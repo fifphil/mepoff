@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planning Congés 2026</title>
+  <style>
+    :root {
+      --bg:       #f1f5f9;
+      --card:     #ffffff;
+      --text:     #0f172a;
+      --muted:    #64748b;
+      --border:   #e2e8f0;
+      --track-bg: #f8fafc;
+      --today:    #ef4444;
+      --name-w:   150px;
+      --row-h:    42px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 2.5rem 2rem;
+      min-height: 100vh;
+    }
+
+    /* ── Page header ── */
+    h1 {
+      text-align: center;
+      font-size: 1.75rem;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+    }
+    .subtitle {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin: 0.3rem 0 2rem;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: var(--card);
+      border-radius: 16px;
+      box-shadow: 0 1px 4px rgba(15,23,42,.06), 0 8px 32px rgba(15,23,42,.08);
+      padding: 1.75rem 2rem 1.5rem;
+    }
+    .scroll-wrap { overflow-x: auto; }
+    .tl { min-width: 720px; }
+
+    /* ── Shared row layout ── */
+    .row { display: flex; align-items: center; }
+    .name-col { width: var(--name-w); flex-shrink: 0; }
+    .track-col { flex: 1; position: relative; }
+
+    /* ── Month header ── */
+    .months-header { margin-bottom: 2px; }
+    .months-bar {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+    }
+    .month-cell {
+      font-size: 0.67rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-align: center;
+    }
+    .month-cell + .month-cell { border-left: 1px solid var(--border); }
+
+    /* ── Today label row ── */
+    .today-row { height: 24px; margin-bottom: 6px; }
+    .today-badge {
+      position: absolute;
+      top: 2px;
+      transform: translateX(-50%);
+      background: var(--today);
+      color: #fff;
+      font-size: 0.62rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 100px;
+      white-space: nowrap;
+    }
+
+    /* ── Person rows ── */
+    .person-row { margin-bottom: 8px; }
+    .person-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding-right: 12px;
+      font-size: 0.83rem;
+      font-weight: 600;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Timeline bar ── */
+    .bar {
+      height: var(--row-h);
+      background: var(--track-bg);
+      border-radius: 8px;
+      position: relative;
+      overflow: visible;
+    }
+    .sep {
+      position: absolute;
+      top: -5px;
+      bottom: -5px;
+      width: 1px;
+      background: var(--border);
+      pointer-events: none;
+    }
+    .today-line {
+      position: absolute;
+      top: -5px;
+      bottom: -5px;
+      width: 2px;
+      background: var(--today);
+      border-radius: 2px;
+      pointer-events: none;
+      z-index: 4;
+    }
+
+    /* ── Vacation block ── */
+    .vac {
+      position: absolute;
+      top: 4px;
+      bottom: 4px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+      cursor: default;
+      transition: filter .15s ease, box-shadow .15s ease, transform .1s ease;
+    }
+    .vac:hover {
+      filter: brightness(0.86);
+      box-shadow: 0 4px 16px rgba(0,0,0,0.18);
+      transform: scaleY(1.1);
+      z-index: 10;
+    }
+    .vac-label {
+      font-size: 0.63rem;
+      font-weight: 700;
+      color: rgba(0,0,0,.5);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0 5px;
+      pointer-events: none;
+    }
+
+    /* Tooltip */
+    .tip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #0f172a;
+      color: #f8fafc;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .15s;
+      z-index: 50;
+    }
+    .tip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 4px solid transparent;
+      border-top-color: #0f172a;
+    }
+    .vac:hover .tip { opacity: 1; }
+
+    /* ── Legend ── */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 2rem;
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted);
+    }
+    .legend-swatch {
+      width: 22px;
+      height: 10px;
+      border-radius: 3px;
+    }
+    .legend-today-item {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--today);
+    }
+    .legend-today-bar {
+      width: 2px;
+      height: 14px;
+      background: var(--today);
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Planning des Congés 2026</h1>
+<p class="subtitle">Mai → Décembre · Équipe de 6 personnes</p>
+
+<div class="card">
+  <div class="scroll-wrap">
+    <div class="tl" id="tl"></div>
+  </div>
+  <div class="legend" id="legend"></div>
+</div>
+
+<script>
+  // ── Data ────────────────────────────────────────────────────────────────────
+  // Timeline: May 1 → Dec 31, 2026  (245 days total)
+  // Day offsets are 0-based from May 1  (May 1 = 0, May 2 = 1 …)
+
+  const TOTAL = 245;
+  const TODAY = 5; // May 6, 2026
+
+  const MONTHS = [
+    { name: 'Mai',       days: 31, start: 0   },
+    { name: 'Juin',      days: 30, start: 31  },
+    { name: 'Juillet',   days: 31, start: 61  },
+    { name: 'Août',      days: 31, start: 92  },
+    { name: 'Septembre', days: 30, start: 123 },
+    { name: 'Octobre',   days: 31, start: 153 },
+    { name: 'Novembre',  days: 30, start: 184 },
+    { name: 'Décembre',  days: 31, start: 214 },
+  ];
+
+  // s = start day offset (inclusive), e = end day offset (inclusive)
+  const PEOPLE = [
+    {
+      name: 'Vincent',
+      color: '#a7f3d0', // vert clair
+      vacations: [
+        { s: 6,   e: 10,  label: '07 – 11 mai'          }, //  5 j.
+        { s: 21,  e: 33,  label: '22 mai – 03 juin'     }, // 13 j.
+        { s: 73,  e: 80,  label: '13 – 20 juillet'      }, //  8 j.
+        { s: 87,  e: 106, label: '27 juil. – 15 août'   }, // 20 j.
+      ],
+    },
+    {
+      name: 'Julie',
+      color: '#fbcfe8', // rose clair
+      vacations: [
+        { s: 7,   e: 25,  label: '08 – 26 mai'          }, // 19 j.
+        { s: 73,  e: 77,  label: '13 – 17 juillet'      }, //  5 j.
+        { s: 101, e: 108, label: '10 – 17 août'         }, //  8 j.
+        { s: 192, e: 203, label: '09 – 20 novembre'     }, // 12 j.
+        { s: 230, e: 244, label: '17 – 31 décembre'     }, // 15 j.
+      ],
+    },
+    {
+      name: 'Phil',
+      color: '#fed7aa', // orange clair
+      vacations: [
+        { s: 6,   e: 11,  label: '07 – 12 mai'          }, //  6 j.
+        { s: 61,  e: 66,  label: '01 – 06 juillet'      }, //  6 j.
+        { s: 84,  e: 91,  label: '24 – 31 juillet'      }, //  8 j.
+        { s: 103, e: 115, label: '12 – 24 août'         }, // 13 j.
+        { s: 178, e: 182, label: '26 – 30 octobre'      }, //  5 j.
+        { s: 241, e: 244, label: '28 – 31 décembre'     }, //  4 j.
+      ],
+    },
+  ];
+
+  // ── Helpers ──────────────────────────────────────────────────────────────────
+  function pct(offset) {
+    return (offset / TOTAL * 100).toFixed(4) + '%';
+  }
+
+  function mk(tag, cls, styles) {
+    const e = document.createElement(tag);
+    if (cls)    e.className = cls;
+    if (styles) Object.assign(e.style, styles);
+    return e;
+  }
+
+  function addSeparators(bar) {
+    MONTHS.forEach(m => {
+      if (m.start === 0) return;
+      bar.appendChild(mk('div', 'sep', { left: pct(m.start) }));
+    });
+  }
+
+  // ── Build timeline ────────────────────────────────────────────────────────────
+  const tl = document.getElementById('tl');
+
+  // 1. Month header row
+  const headerRow = mk('div', 'row months-header');
+  headerRow.appendChild(mk('div', 'name-col'));
+  const headerTrack = mk('div', 'track-col');
+  const monthsBar = mk('div', 'months-bar');
+  MONTHS.forEach(m => {
+    const cell = mk('div', 'month-cell');
+    cell.textContent = m.name;
+    cell.style.flex = m.days;
+    monthsBar.appendChild(cell);
+  });
+  headerTrack.appendChild(monthsBar);
+  headerRow.appendChild(headerTrack);
+  tl.appendChild(headerRow);
+
+  // 2. "Aujourd'hui" badge row
+  const todayRow = mk('div', 'row today-row');
+  todayRow.appendChild(mk('div', 'name-col'));
+  const todayTrack = mk('div', 'track-col');
+  const badge = mk('div', 'today-badge');
+  badge.textContent = "Aujourd'hui";
+  badge.style.left = pct(TODAY + 0.5);
+  todayTrack.appendChild(badge);
+  todayRow.appendChild(todayTrack);
+  tl.appendChild(todayRow);
+
+  // 3. Person rows
+  PEOPLE.forEach(person => {
+    const personRow = mk('div', 'row person-row');
+
+    // Name column
+    const nameWrapper = mk('div', 'name-col');
+    const nameDiv     = mk('div', 'person-name');
+    const dot         = mk('span', 'dot', { background: person.color });
+    nameDiv.appendChild(dot);
+    nameDiv.appendChild(document.createTextNode(person.name));
+    nameWrapper.appendChild(nameDiv);
+    personRow.appendChild(nameWrapper);
+
+    // Bar
+    const bar = mk('div', 'bar track-col');
+
+    addSeparators(bar);
+    bar.appendChild(mk('div', 'today-line', { left: pct(TODAY + 0.5) }));
+
+    // Vacation blocks
+    person.vacations.forEach(v => {
+      const dur   = v.e - v.s + 1;
+      const block = mk('div', 'vac', {
+        left:       pct(v.s),
+        width:      pct(dur),
+        background: person.color,
+      });
+
+      // Inline label — only for wide-enough blocks
+      if (dur >= 10) {
+        const lbl = mk('span', 'vac-label');
+        lbl.textContent = v.label;
+        block.appendChild(lbl);
+      }
+
+      // Tooltip (always visible on hover)
+      const tip = mk('div', 'tip');
+      tip.textContent = `${v.label} · ${dur} j.`;
+      block.appendChild(tip);
+
+      bar.appendChild(block);
+    });
+
+    personRow.appendChild(bar);
+    tl.appendChild(personRow);
+  });
+
+  // ── Legend ───────────────────────────────────────────────────────────────────
+  const legend = document.getElementById('legend');
+
+  PEOPLE.forEach(person => {
+    const item   = mk('div', 'legend-item');
+    const swatch = mk('div', 'legend-swatch', { background: person.color });
+    item.appendChild(swatch);
+    item.appendChild(document.createTextNode(person.name));
+    legend.appendChild(item);
+  });
+
+  // Placeholder slots for the remaining 4 people
+  for (let i = PEOPLE.length + 1; i <= 6; i++) {
+    const item   = mk('div', 'legend-item');
+    item.style.opacity = '0.35';
+    const swatch = mk('div', 'legend-swatch', {
+      background: '#cbd5e1',
+      outline: '1px dashed #94a3b8',
+    });
+    item.appendChild(swatch);
+    item.appendChild(document.createTextNode(`Personne ${i}`));
+    legend.appendChild(item);
+  }
+
+  const todayItem = mk('div', 'legend-today-item');
+  todayItem.appendChild(mk('div', 'legend-today-bar'));
+  todayItem.appendChild(document.createTextNode("Aujourd'hui · 6 mai 2026"));
+  legend.appendChild(todayItem);
+</script>
+
+</body>
+</html>
