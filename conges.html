@@ -233,7 +233,7 @@
 <body>
 
 <h1>Planning des Congés 2026</h1>
-<p class="subtitle">Mai → Décembre · Équipe de 6 personnes</p>
+<p class="subtitle">Janvier → Décembre · Équipe de 6 personnes</p>
 
 <div class="card">
   <div class="scroll-wrap">
@@ -244,63 +244,114 @@
 
 <script>
   // ── Data ────────────────────────────────────────────────────────────────────
-  // Timeline: May 1 → Dec 31, 2026  (245 days total)
-  // Day offsets are 0-based from May 1  (May 1 = 0, May 2 = 1 …)
+  // Timeline: Jan 1 → Dec 31, 2026  (365 days total)
+  // Day offsets are 0-based from Jan 1  (Jan 1 = 0, Jan 2 = 1 …)
 
-  const TOTAL = 245;
-  const TODAY = 5; // May 6, 2026
+  const TOTAL = 365;
+  const TODAY = 126; // May 7, 2026
 
   const MONTHS = [
-    { name: 'Mai',       days: 31, start: 0   },
-    { name: 'Juin',      days: 30, start: 31  },
-    { name: 'Juillet',   days: 31, start: 61  },
-    { name: 'Août',      days: 31, start: 92  },
-    { name: 'Septembre', days: 30, start: 123 },
-    { name: 'Octobre',   days: 31, start: 153 },
-    { name: 'Novembre',  days: 30, start: 184 },
-    { name: 'Décembre',  days: 31, start: 214 },
+    { name: 'Jan.',      days: 31, start: 0   },
+    { name: 'Fév.',      days: 28, start: 31  },
+    { name: 'Mar.',      days: 31, start: 59  },
+    { name: 'Avr.',      days: 30, start: 90  },
+    { name: 'Mai',       days: 31, start: 120 },
+    { name: 'Juin',      days: 30, start: 151 },
+    { name: 'Juil.',     days: 31, start: 181 },
+    { name: 'Août',      days: 31, start: 212 },
+    { name: 'Sep.',      days: 30, start: 243 },
+    { name: 'Oct.',      days: 31, start: 273 },
+    { name: 'Nov.',      days: 30, start: 304 },
+    { name: 'Déc.',      days: 31, start: 334 },
   ];
 
   // s = start day offset (inclusive), e = end day offset (inclusive)
+  // End dates from user are exclusive (return day) → last vacation day = end − 1
+  // Vacations starting before Jan 1 are clipped to offset 0
+  // Vacations ending after Dec 31 are clipped to offset 364
   const PEOPLE = [
     {
       name: 'Jon',
       color: '#c7d2fe', // bleu lavande
       vacations: [
-        { s: 0,   e: 123, label: '01 mai – 01 sept.'    }, // 124 j.
+        { s: 0,   e: 3,   label: '01 – 04 jan.'         }, //  4 j. (déb. 20 déc.)
+        { s: 105, e: 115, label: '16 – 26 avr.'         }, // 11 j.
+        { s: 116, e: 150, label: '27 avr. – 31 mai'     }, // 35 j.
+        { s: 151, e: 171, label: '01 – 21 juin'         }, // 21 j.
+        { s: 172, e: 180, label: '22 – 30 juin'         }, //  9 j.
       ],
     },
     {
       name: 'Julie',
       color: '#fbcfe8', // rose clair
       vacations: [
-        { s: 7,   e: 25,  label: '08 – 26 mai'          }, // 19 j.
-        { s: 73,  e: 77,  label: '13 – 17 juillet'      }, //  5 j.
-        { s: 101, e: 108, label: '10 – 17 août'         }, //  8 j.
-        { s: 192, e: 203, label: '09 – 20 novembre'     }, // 12 j.
-        { s: 230, e: 244, label: '17 – 31 décembre'     }, // 15 j.
+        { s: 0,   e: 3,   label: '01 – 04 jan.'         }, //  4 j. (déb. 17 déc.)
+        { s: 43,  e: 45,  label: '13 – 15 fév.'         }, //  3 j.
+        { s: 64,  e: 66,  label: '06 – 08 mar.'         }, //  3 j.
+        { s: 85,  e: 87,  label: '27 – 29 mar.'         }, //  3 j.
+        { s: 130, e: 145, label: '11 – 26 mai'          }, // 16 j.
+        { s: 193, e: 199, label: '13 – 19 juil.'        }, //  7 j.
+        { s: 221, e: 228, label: '10 – 17 août'         }, //  8 j.
+        { s: 312, e: 325, label: '09 – 22 nov.'         }, // 14 j.
+        { s: 350, e: 364, label: '17 – 31 déc.'         }, // 15 j.
+      ],
+    },
+    {
+      name: 'Julien',
+      color: '#bfdbfe', // bleu clair
+      vacations: [
+        { s: 134, e: 136, label: '15 – 17 mai'          }, //  3 j.
+        { s: 193, e: 194, label: '13 – 14 juil.'        }, //  2 j.
+        { s: 200, e: 213, label: '20 juil. – 02 août'   }, // 14 j.
+      ],
+    },
+    {
+      name: 'Laurie',
+      color: '#fef08a', // jaune clair
+      vacations: [
+        { s: 1,   e: 6,   label: '02 – 07 jan.'         }, //  6 j.
+        { s: 113, e: 115, label: '24 – 26 avr.'         }, //  3 j.
+        { s: 116, e: 116, label: '27 avr.'              }, //  1 j.
+        { s: 118, e: 123, label: '29 avr. – 04 mai'     }, //  6 j.
+        { s: 124, e: 125, label: '05 – 06 mai'          }, //  2 j.
+        { s: 134, e: 136, label: '15 – 17 mai'          }, //  3 j.
+        { s: 193, e: 194, label: '13 – 14 juil.'        }, //  2 j.
+        { s: 281, e: 297, label: '09 – 25 oct.'         }, // 17 j.
       ],
     },
     {
       name: 'Phil',
       color: '#fed7aa', // orange clair
       vacations: [
-        { s: 6,   e: 11,  label: '07 – 12 mai'          }, //  6 j.
-        { s: 61,  e: 66,  label: '01 – 06 juillet'      }, //  6 j.
-        { s: 84,  e: 91,  label: '24 – 31 juillet'      }, //  8 j.
-        { s: 103, e: 115, label: '12 – 24 août'         }, // 13 j.
-        { s: 178, e: 182, label: '26 – 30 octobre'      }, //  5 j.
-        { s: 241, e: 244, label: '28 – 31 décembre'     }, //  4 j.
+        { s: 29,  e: 33,  label: '30 jan. – 03 fév.'    }, //  5 j.
+        { s: 53,  e: 54,  label: '23 – 24 fév.'         }, //  2 j.
+        { s: 64,  e: 66,  label: '06 – 08 mar.'         }, //  3 j.
+        { s: 110, e: 110, label: '21 avr.'              }, //  1 j.
+        { s: 130, e: 131, label: '11 – 12 mai'          }, //  2 j.
+        { s: 134, e: 136, label: '15 – 17 mai'          }, //  3 j.
+        { s: 169, e: 171, label: '19 – 21 juin'         }, //  3 j.
+        { s: 181, e: 186, label: '01 – 06 juil.'        }, //  6 j.
+        { s: 193, e: 194, label: '13 – 14 juil.'        }, //  2 j.
+        { s: 204, e: 213, label: '24 juil. – 02 août'   }, // 10 j.
+        { s: 223, e: 235, label: '12 – 24 août'         }, // 13 j.
+        { s: 298, e: 304, label: '26 oct. – 01 nov.'    }, //  7 j.
+        { s: 361, e: 364, label: '28 – 31 déc.'         }, //  4 j.
       ],
     },
     {
       name: 'Vincent',
       color: '#a7f3d0', // vert clair
       vacations: [
-        { s: 6,   e: 10,  label: '07 – 11 mai'          }, //  5 j.
-        { s: 21,  e: 33,  label: '22 mai – 03 juin'     }, // 13 j.
-        { s: 73,  e: 80,  label: '13 – 20 juillet'      }, //  8 j.
-        { s: 87,  e: 106, label: '27 juil. – 15 août'   }, // 20 j.
+        { s: 0,   e: 3,   label: '01 – 04 jan.'         }, //  4 j. (déb. 31 déc.)
+        { s: 81,  e: 81,  label: '23 mar.'              }, //  1 j.
+        { s: 126, e: 129, label: '07 – 10 mai'          }, //  4 j.
+        { s: 134, e: 136, label: '15 – 17 mai'          }, //  3 j.
+        { s: 145, e: 152, label: '26 mai – 02 juin'     }, //  8 j.
+        { s: 193, e: 194, label: '13 – 14 juil.'        }, //  2 j.
+        { s: 195, e: 199, label: '15 – 19 juil.'        }, //  5 j.
+        { s: 207, e: 220, label: '27 juil. – 09 août'   }, // 14 j.
+        { s: 273, e: 278, label: '01 – 06 oct.'         }, //  6 j.
+        { s: 354, e: 364, label: '21 – 31 déc.'         }, // 11 j.
       ],
     },
   ];
@@ -411,22 +462,9 @@
     legend.appendChild(item);
   });
 
-  // Placeholder slots for the remaining 4 people
-  for (let i = PEOPLE.length + 1; i <= 6; i++) {
-    const item   = mk('div', 'legend-item');
-    item.style.opacity = '0.35';
-    const swatch = mk('div', 'legend-swatch', {
-      background: '#cbd5e1',
-      outline: '1px dashed #94a3b8',
-    });
-    item.appendChild(swatch);
-    item.appendChild(document.createTextNode(`Personne ${i}`));
-    legend.appendChild(item);
-  }
-
   const todayItem = mk('div', 'legend-today-item');
   todayItem.appendChild(mk('div', 'legend-today-bar'));
-  todayItem.appendChild(document.createTextNode("Aujourd'hui · 6 mai 2026"));
+  todayItem.appendChild(document.createTextNode("Aujourd'hui · 7 mai 2026"));
   legend.appendChild(todayItem);
 </script>
 
